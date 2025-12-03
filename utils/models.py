@@ -155,19 +155,37 @@ def _als_user_step(
     reg_coef: float,
 ) -> NDArray[float]:
     
-    # Явно конвертируем ВСЁ к float64
-    V = np.asarray(items_embeddings, dtype=np.float64)
-    r = np.asarray(user_ratings, dtype=np.float64)
-    lamb = float(reg_coef)
+    # 1. Гарантированное преобразование к float64
+    V = np.array(items_embeddings, dtype=np.float64, copy=True)
+    r = np.array(user_ratings, dtype=np.float64, copy=True)
+    
+    # 2. Проверка размерностей
+    if V.shape[0] != r.shape[0]:
+        raise ValueError(f"Несовпадение размеров: V.shape={V.shape}, r.shape={r.shape}")
+    
+    # 3. Размерность эмбеддингов
+    if V.ndim != 2:
+        raise ValueError(f"items_embeddings должен быть 2D, получили {V.ndim}D")
     
     emb_dim = V.shape[1]
+    if emb_dim == 0:
+        return np.array([], dtype=np.float64)
     
-    # Используем solve вместо inv
-    A = V.T @ V + lamb * np.eye(emb_dim, dtype=np.float64)
-    b = V.T @ r
+    # 4. Вычисления
+    lamb = float(reg_coef)
+    V_t = V.T
     
-    u = np.linalg.solve(A, b)
-    return u
+    A = V_t @ V + lamb * np.eye(emb_dim, dtype=np.float64)
+    b = V_t @ r
+    
+    # 5. Решение
+    try:
+        u = np.linalg.solve(A, b)
+    except np.linalg.LinAlgError:
+        # Если матрица вырожденная, используем псевдообратную
+        u = np.linalg.pinv(A) @ b
+    
+    return u.astype(np.float64)
 
 def _als_item_step(
     users_embeddings: NDArray[float],
