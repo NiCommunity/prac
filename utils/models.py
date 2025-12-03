@@ -287,6 +287,10 @@ class ALS:
 
         #interactions - первый столбец ID юзера, второй - ID трека, третий - оценка трека этим юзером. 
 
+        user_col = 'user_col'
+        item_col = 'item_col'
+        rating_col = 'rating_col'
+
         np.random.seed(self.random_seed) #Установили сид
 
         unique_users=interactions["user_col"].unique() #Взяли столбец со всеми уникальными юзерами
