@@ -154,28 +154,19 @@ def _als_user_step(
     user_ratings: NDArray[float],
     reg_coef: float,
 ) -> NDArray[float]:
-    """
-    ALS model (https://yadi.sk/i/7ZONA2kIqROfRQ) consists of 2 steps: 
-        1) recompute users embeddings
-        2) recompute items embeddings
     
-    This function allows one to recompute embedding for one particular user,
-    given ratings that he gave and items_embeddings of those items, that the user has rated
-    """
-    # V - items_embeddings
-    # lamb - reg_coef
-    # r - user_ratings
-
-    lamb=float(reg_coef)
-    r=user_ratings.astype(float)
-    V=items_embeddings.astype(float)
-    V_t=V.T
-    VV = V_t@V
-    dim=VV.shape[0]
-    I=np.eye(dim)
-
-    u=np.linalg.inv((V_t @ V + lamb*I)) @ V_t @ r
-
+    # Явно конвертируем ВСЁ к float64
+    V = np.asarray(items_embeddings, dtype=np.float64)
+    r = np.asarray(user_ratings, dtype=np.float64)
+    lamb = float(reg_coef)
+    
+    emb_dim = V.shape[1]
+    
+    # Используем solve вместо inv
+    A = V.T @ V + lamb * np.eye(emb_dim, dtype=np.float64)
+    b = V.T @ r
+    
+    u = np.linalg.solve(A, b)
     return u
 
 def _als_item_step(
