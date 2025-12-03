@@ -287,14 +287,11 @@ class ALS:
 
         #interactions - первый столбец ID юзера, второй - ID трека, третий - оценка трека этим юзером. 
 
-        user_col = 'user_col'
-        item_col = 'item_col'
-        rating_col = 'rating_col'
 
         np.random.seed(self.random_seed) #Установили сид
 
-        unique_users=interactions["user_col"].unique() #Взяли столбец со всеми уникальными юзерами
-        unique_items=interactions["item_col"].unique() #Взяли столбец со всеми уникальными треками
+        unique_users=interactions[user_col].unique() #Взяли столбец со всеми уникальными юзерами
+        unique_items=interactions[item_col].unique() #Взяли столбец со всеми уникальными треками
 
         #Если эмбеддинги еще не инициализированы, то надо их задать случайным образом.
         if embeddings_initialized is False:
@@ -311,18 +308,18 @@ class ALS:
         user_tracks={} # user - треки которые он слушал
         user_ratings={} #user - рейтинг треков которые он слушал
 
-        for user, group in interactions.groupby("user_col"):
-            user_tracks[user]=group["item_col"].tolist()
-            user_ratings[user]=group["rating_col"].tolist()
+        for user, group in interactions.groupby(user_col):
+            user_tracks[user]=group[item_col].tolist()
+            user_ratings[user]=group[rating_col].tolist()
 
         #Для каждого трека сделаем словари следующего вида - {трек: юзер которые слушали этот трек} и {трек: рейтинги которые поставили этому треку}
 
         track_users={}
         track_ratings={}
 
-        for track, group in interactions.groupby("item_col"):
-            track_users[track]=group["user_col"].tolist()
-            track_ratings[track]=group["rating_col"].tolist()
+        for track, group in interactions.groupby(item_col):
+            track_users[track]=group[user_col].tolist()
+            track_ratings[track]=group[rating_col].tolist()
 
 
 
